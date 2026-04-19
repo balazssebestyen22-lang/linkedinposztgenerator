@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Poszt Generátor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F3EE;--surface:#FFFFFF;--surface2:#F0EDE6;
+  --border:#E2DDD5;--text:#1A1916;--text-muted:#7A776F;
+  --accent:#1B4FD8;--accent-text:#1B3FAA;--linkedin:#0A66C2;
+  --success:#0F6E56;--success-light:#E1F5EE;
+  --danger:#A32D2D;--danger-light:#FCEBEB;--danger-border:#F09595;
+  --tag-bg:#F0EDE6;--tag-active-bg:#1B4FD8;--tag-active-text:#FFFFFF;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem}
+.container{max-width:960px;margin:0 auto}
+.header{text-align:center;margin-bottom:2rem}
+.logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:0.75rem}
+.logo-icon{width:36px;height:36px;background:var(--linkedin);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:700}
+h1{font-family:'DM Serif Display',serif;font-size:2rem;font-weight:400;letter-spacing:-0.5px}
+.subtitle{color:var(--text-muted);font-size:0.9rem;margin-top:0.25rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1rem}
+.card-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.75rem}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+@media(max-width:700px){.two-col,.three-col{grid-template-columns:1fr}h1{font-size:1.5rem}}
+textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:0.875rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);background:var(--surface);resize:vertical;outline:none;transition:border-color 0.2s;line-height:1.6}
+textarea:focus{border-color:var(--accent)}
+textarea::placeholder{color:var(--text-muted)}
+input[type="text"]{width:100%;border:1px solid var(--border);border-radius:10px;padding:0.75rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);background:var(--surface);outline:none;transition:border-color 0.2s}
+input[type="text"]:focus{border-color:var(--accent)}
+input[type="text"]::placeholder{color:var(--text-muted)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:6px 14px;border-radius:100px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--tag-bg);color:var(--text);transition:all 0.15s;user-select:none}
+.tag:hover{border-color:var(--accent);color:var(--accent-text)}
+.tag.active{background:var(--tag-active-bg);color:var(--tag-active-text);border-color:var(--tag-active-bg)}
+.toggle-row{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:100px;transition:background 0.2s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:white;border-radius:50%;transition:transform 0.2s}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+.toggle-label{font-size:14px;color:var(--text-muted)}
+select{padding:7px 32px 7px 12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A776F'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:pointer;outline:none}
+select:focus{border-color:var(--accent)}
+.options-flex{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+/* Ideas */
+.ideas-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:0.75rem;min-height:10px}
+.idea-chip{padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:1px dashed var(--border);background:transparent;color:var(--text-muted);transition:all 0.15s;text-align:left;font-family:'DM Sans',sans-serif;line-height:1.4}
+.idea-chip:hover{border-color:var(--accent);color:var(--accent-text);background:#EEF2FF;border-style:solid}
+.ideas-controls{display:flex;align-items:center;gap:1rem;margin-top:0.5rem;flex-wrap:wrap}
+.ideas-btn{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:4px;padding:0}
+.ideas-btn:hover{text-decoration:underline}
+.ideas-btn:disabled{opacity:0.5;cursor:not-allowed}
+.ideas-note{font-size:11px;color:var(--text-muted)}
+/* Viral banner */
+.viral-banner{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;display:none}
+.viral-banner.visible{display:flex;gap:12px;align-items:flex-start}
+.viral-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.viral-content{flex:1}
+.viral-label{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.viral-text{font-size:13px;color:var(--text);line-height:1.7}
+.viral-close{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;flex-shrink:0;padding:0}
+.viral-close:hover{color:var(--text)}
+/* Generate button */
+.generate-btn{width:100%;padding:0.9rem;background:var(--text);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;transition:opacity 0.2s,transform 0.1s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:1.25rem}
+.generate-btn:hover{opacity:0.85}
+.generate-btn:active{transform:scale(0.99)}
+.generate-btn:disabled{opacity:0.5;cursor:not-allowed}
+.usage-info{font-size:12px;color:var(--text-muted);text-align:center;margin-top:0.5rem;min-height:18px}
+.usage-info.warning{color:#C05621;font-weight:500}
+.usage-info.limit{color:var(--danger);font-weight:500}
+.loading-dots{display:none;gap:4px;align-items:center}
+.loading-dots.visible{display:flex}
+.loading-dots span{width:6px;height:6px;background:white;border-radius:50%;animation:bounce 1.2s infinite}
+.loading-dots span:nth-child(2){animation-delay:0.2s}
+.loading-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+/* Profile card */
+.profile-saved-badge{font-size:11px;color:var(--success);font-weight:500;margin-left:8px;opacity:0;transition:opacity 0.3s}
+.profile-saved-badge.visible{opacity:1}
+.file-upload-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px dashed var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;background:transparent;margin-top:0.5rem}
+.file-upload-btn:hover{border-color:var(--accent);color:var(--accent-text);border-style:solid;background:#EEF2FF}
+/* A/B Results */
+.results-container{margin-bottom:1rem;display:none}
+.results-container.visible{display:block}
+.ab-tabs{display:flex;gap:6px;margin-bottom:0.75rem}
+.ab-tab-btn{padding:7px 20px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;background:var(--surface);color:var(--text-muted);transition:all 0.15s}
+.ab-tab-btn.active{background:var(--text);color:white;border-color:var(--text)}
+.ab-tab-btn:hover:not(.active){background:var(--surface2)}
+.result-panel{display:none}
+.result-panel.active{display:block}
+/* Result card */
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.result-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.result-title{font-size:13px;font-weight:500;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.result-actions{display:flex;gap:6px;flex-wrap:wrap}
+.action-btn{padding:5px 11px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text);transition:all 0.15s}
+.action-btn:hover{background:var(--surface2)}
+.action-btn.copied,.action-btn.saved-ok{background:var(--success-light);border-color:var(--success);color:var(--success)}
+.action-btn.edit-active{background:#EEF2FF;border-color:#C7D2FE;color:var(--accent-text)}
+.action-btn.preview-active{background:#EEF2FF;border-color:#C7D2FE;color:var(--accent-text)}
+.result-body{padding:1.5rem}
+.post-display{font-size:15px;line-height:1.7;color:var(--text);white-space:pre-wrap;min-height:80px}
+.post-display.hidden{display:none}
+.post-editor-ta{display:none;width:100%;font-size:15px;line-height:1.7;color:var(--text);border:1.5px solid var(--accent);border-radius:10px;padding:1rem;font-family:'DM Sans',sans-serif;background:var(--surface);resize:vertical;outline:none;min-height:160px}
+.post-editor-ta.visible{display:block}
+.char-count{font-size:12px;color:var(--text-muted);margin-top:1rem;text-align:right}
+.char-count.over{color:#E24B4A}
+.ai-edit-row{padding:0 1.5rem 1rem;display:none;gap:8px;align-items:center}
+.ai-edit-row.visible{display:flex}
+.ai-edit-label{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.ai-edit-input{flex:1;border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);outline:none}
+.ai-edit-input:focus{border-color:var(--accent)}
+.ai-edit-input::placeholder{color:var(--text-muted)}
+.ai-edit-btn{padding:7px 14px;background:var(--accent);color:white;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;display:flex;align-items:center;gap:5px}
+.ai-edit-btn:hover{opacity:0.85}
+.ai-edit-btn:disabled{opacity:0.5;cursor:not-allowed}
+.ai-loading{display:none;gap:4px;align-items:center}
+.ai-loading.visible{display:flex}
+.ai-loading span{width:5px;height:5px;background:white;border-radius:50%;animation:bounce 1.2s infinite}
+.ai-loading span:nth-child(2){animation-delay:0.2s}
+.ai-loading span:nth-child(3){animation-delay:0.4s}
+.regenerate-row{display:flex;gap:8px;padding:1rem 1.5rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.regen-btn{flex:1;min-width:110px;padding:7px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text-muted);transition:all 0.15s}
+.regen-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--text-muted)}
+/* LinkedIn Preview */
+.lp-wrap{display:none;padding:1rem 1.5rem 0}
+.lp-wrap.visible{display:block}
+.lp-card{background:white;border:1px solid #E0DFDC;border-radius:8px;overflow:hidden;max-width:540px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.lp-top{padding:12px 16px;display:flex;align-items:flex-start;gap:10px}
+.lp-avatar{width:48px;height:48px;border-radius:50%;background:#B0AAA3;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:white;letter-spacing:-0.5px}
+.lp-info{flex:1}
+.lp-name{font-size:14px;font-weight:600;color:#000;line-height:1.3}
+.lp-headline{font-size:12px;color:#666;line-height:1.4;margin-top:1px}
+.lp-meta{font-size:11px;color:#888;margin-top:3px;display:flex;align-items:center;gap:3px}
+.lp-follow-btn{font-size:14px;font-weight:600;color:#0A66C2;background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;align-self:center}
+.lp-body{padding:0 16px 12px;font-size:14px;color:#000;line-height:1.55}
+.lp-text{white-space:pre-wrap;word-break:break-word}
+.lp-more-btn{background:none;border:none;color:#888;cursor:pointer;font-size:14px;padding:0;font-family:inherit}
+.lp-divider{border:none;border-top:1px solid #E0DFDC;margin:0}
+.lp-reactions{padding:8px 16px 4px;font-size:12px;color:#666}
+.lp-actions{display:flex;padding:2px 8px 6px}
+.lp-action{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 4px;border:none;background:none;cursor:pointer;color:#666;font-size:13px;font-weight:600;border-radius:4px;font-family:inherit;transition:background 0.15s}
+.lp-action:hover{background:#F3F2EF}
+.lp-action svg{width:18px;height:18px;flex-shrink:0}
+/* Saved posts */
+.saved-section{display:none}
+.saved-section.visible{display:block}
+.saved-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px}
+.saved-header-title{font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted)}
+.clear-all-btn{font-size:12px;color:var(--danger);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline}
+.saved-search{width:100%;border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.875rem;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);outline:none;margin-bottom:0.75rem}
+.saved-search:focus{border-color:var(--accent)}
+.saved-search::placeholder{color:var(--text-muted)}
+.saved-list{display:flex;flex-direction:column;gap:8px}
+.saved-item{border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden;transition:border-color 0.15s}
+.saved-item:hover{border-color:#C7D2FE}
+.saved-item-top{padding:0.875rem 1rem;cursor:pointer}
+.saved-item-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.saved-item-topic{font-size:13px;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved-item-date{font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0}
+.saved-item-preview{font-size:12px;color:var(--text-muted);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.saved-item-body{display:none;border-top:1px solid var(--border)}
+.saved-item-body.open{display:block}
+.saved-item-editor-wrap{padding:1rem}
+.saved-item-ta{width:100%;font-size:14px;line-height:1.7;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:0.875rem;font-family:'DM Sans',sans-serif;background:var(--surface);resize:vertical;outline:none;min-height:120px}
+.saved-item-ta:focus{border-color:var(--accent)}
+.saved-item-actions{display:flex;gap:6px;padding:0 1rem 1rem;flex-wrap:wrap}
+.saved-action{font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:none;color:var(--text);font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.saved-action:hover{background:var(--surface2)}
+.saved-action.primary{background:var(--text);color:white;border-color:var(--text)}
+.saved-action.primary:hover{opacity:0.85}
+.saved-action.del{color:var(--danger)}
+.saved-action.del:hover{background:var(--danger-light);border-color:var(--danger-border)}
+.saved-action.copy-ok{background:var(--success-light);border-color:var(--success);color:var(--success)}
+.empty-saved{font-size:13px;color:var(--text-muted);text-align:center;padding:1.5rem;border:1px dashed var(--border);border-radius:12px}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo"><div class="logo-icon">in</div></div>
+    <h1>LinkedIn Poszt Generátor</h1>
+    <p class="subtitle">Autentikus, figyelemfelkeltő posztok – a saját hangvételedben</p>
+  </div>
+
+  <!-- Stílus profil -->
+  <div class="card">
+    <p class="card-title">Rólam / Stílusom <span class="profile-saved-badge" id="profile-saved-badge">✓ Mentve</span></p>
+    <div class="two-col" style="margin-bottom:1rem">
+      <div>
+        <p class="card-title" style="margin-bottom:0.4rem">Neved</p>
+        <input type="text" id="profile-name" placeholder="Pl. Kovács Péter" oninput="debounceProfileSave()">
+      </div>
+      <div>
+        <p class="card-title" style="margin-bottom:0.4rem">Beosztásod / Headline</p>
+        <input type="text" id="profile-headline" placeholder="Pl. Vállalkozó | Marketing szakértő" oninput="debounceProfileSave()">
+      </div>
+    </div>
+    <p class="card-title" style="margin-bottom:0.4rem">Korábbi posztjaid (stílus alapja)</p>
+    <textarea id="style-posts" rows="5" placeholder="Illessz be 2–5 korábbi LinkedIn posztot. Az AI ebből tanulja meg a hangvételedet, mondatszerkezetedet, stílusodat…" oninput="debounceProfileSave()"></textarea>
+    <label class="file-upload-btn" for="style-file-input">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      .txt fájl feltöltése
+    </label>
+    <input type="file" id="style-file-input" accept=".txt" style="display:none">
+    <div style="margin-top:1rem">
+      <p class="card-title" style="margin-bottom:0.4rem">Hangvétel rövid leírása (opcionális)</p>
+      <input type="text" id="voice-input" placeholder="Pl. közvetlen, vicces, őszinte, szakmai de emberi…" oninput="debounceProfileSave()">
+    </div>
+  </div>
+
+  <div class="viral-banner" id="viral-banner">
+    <div class="viral-icon">🔥</div>
+    <div class="viral-content">
+      <div class="viral-label">Virális trendek most a LinkedIn-en</div>
+      <div id="viral-text" class="viral-text">Betöltés…</div>
+    </div>
+    <button class="viral-close" onclick="document.getElementById('viral-banner').classList.remove('visible')">×</button>
+  </div>
+
+  <div class="card">
+    <p class="card-title">Miről szóljon a poszt?</p>
+    <textarea id="topic" rows="3" placeholder="Pl. Sikeres projektzárás, iparági trend, személyes tanulság, új partnerség, ügyféltörténet…"></textarea>
+    <div class="ideas-row" id="ideas-row"></div>
+    <div class="ideas-controls">
+      <button class="ideas-btn" id="ideas-btn" onclick="generateIdeas()">✦ Trendi ötletek generálása</button>
+      <span class="ideas-note" id="ideas-note"></span>
+    </div>
+
+    <div style="margin-top:1.5rem" class="three-col">
+      <div>
+        <p class="card-title">Célközönség</p>
+        <div class="tags" id="audience-tags">
+          <div class="tag active" data-value="altalanos">Általános</div>
+          <div class="tag" data-value="szakmai">Szakmai</div>
+          <div class="tag" data-value="ugyfel">Ügyfelek</div>
+          <div class="tag" data-value="vallalkozo">Vállalkozók</div>
+          <div class="tag" data-value="fejleszto">Fejlesztők</div>
+        </div>
+      </div>
+      <div>
+        <p class="card-title">Poszt stílusa</p>
+        <div class="tags" id="style-tags">
+          <div class="tag active" data-value="sztori">Személyes sztori</div>
+          <div class="tag" data-value="edukativ">Edukatív</div>
+          <div class="tag" data-value="promo">Ajánlat / promo</div>
+          <div class="tag" data-value="inspiralo">Inspiráló</div>
+          <div class="tag" data-value="velemeny">Vélemény</div>
+        </div>
+      </div>
+      <div>
+        <p class="card-title">Hossz</p>
+        <div class="tags" id="length-tags">
+          <div class="tag" data-value="rovid">Rövid (~100 szó)</div>
+          <div class="tag active" data-value="kozepes">Közepes (~200 szó)</div>
+          <div class="tag" data-value="hosszu">Hosszú (~350 szó)</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem" class="two-col">
+      <div>
+        <p class="card-title">Call-to-action típusa</p>
+        <select id="cta-select" style="width:100%;padding:0.75rem 2rem 0.75rem 1rem">
+          <option value="nincs">Nincs CTA</option>
+          <option value="kerdes" selected>Kérdés – kommentelésre ösztönöz</option>
+          <option value="link">Weboldalra / tartalomra hívás</option>
+          <option value="kapcsolat">Kapcsolatfelvételre hívás</option>
+          <option value="like">Like / mentés kérés</option>
+        </select>
+      </div>
+      <div>
+        <p class="card-title">Beállítások</p>
+        <div class="options-flex">
+          <label class="toggle-row">
+            <label class="toggle"><input type="checkbox" id="emoji-toggle" checked><span class="toggle-slider"></span></label>
+            <span class="toggle-label">Emojik</span>
+          </label>
+          <label class="toggle-row">
+            <label class="toggle"><input type="checkbox" id="viral-toggle" checked><span class="toggle-slider"></span></label>
+            <span class="toggle-label">Virális inspiráció</span>
+          </label>
+          <select id="lang-select">
+            <option value="hu">🇭🇺 Magyar</option>
+            <option value="en">🇬🇧 English</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="generate-btn" id="gen-btn" onclick="generatePost()">
+      <span id="btn-text">✦ A & B változat generálása</span>
+      <div class="loading-dots" id="loading"><span></span><span></span><span></span></div>
+    </button>
+    <div class="usage-info" id="usage-info"></div>
+  </div>
+
+  <!-- A/B eredmények -->
+  <div class="results-container" id="results-container">
+    <div class="ab-tabs">
+      <button class="ab-tab-btn active" id="tab-a" onclick="switchTab('a')">A változat</button>
+      <button class="ab-tab-btn" id="tab-b" onclick="switchTab('b')">B változat</button>
+    </div>
+
+    <!-- Panel A -->
+    <div class="result-panel active" id="panel-a">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            A változat
+          </div>
+          <div class="result-actions">
+            <button class="action-btn" id="preview-btn-a" onclick="togglePreview('a')">👁 Előnézet</button>
+            <button class="action-btn" id="save-btn-a" onclick="savePost('a')">Mentés</button>
+            <button class="action-btn" id="edit-btn-a" onclick="toggleEdit('a')">✏ Szerkesztés</button>
+            <button class="action-btn" id="copy-btn-a" onclick="copyPost('a')">Másolás</button>
+            <button class="action-btn" id="export-btn-a" onclick="exportPost('a')">⬇ .txt</button>
+          </div>
+        </div>
+        <div class="lp-wrap" id="lp-a"></div>
+        <div class="result-body">
+          <div class="post-display" id="post-output-a"></div>
+          <textarea class="post-editor-ta" id="post-editor-a" oninput="syncEditor('a')"></textarea>
+          <div class="char-count" id="char-count-a"></div>
+        </div>
+        <div class="ai-edit-row" id="ai-edit-row-a">
+          <span class="ai-edit-label">AI átírás:</span>
+          <input type="text" class="ai-edit-input" id="ai-edit-input-a" placeholder="Pl. legyen rövidebb, tegyél be konkrét számot, erősebb hook…" onkeydown="if(event.key==='Enter')applyAiEdit('a')">
+          <button class="ai-edit-btn" id="ai-edit-btn-a" onclick="applyAiEdit('a')">
+            <span id="ai-edit-btn-text-a">Átírás</span>
+            <div class="ai-loading" id="ai-edit-loading-a"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+        <div class="regenerate-row">
+          <button class="regen-btn" onclick="regenVariant('rövidebb','a')">↙ Rövidebb</button>
+          <button class="regen-btn" onclick="regenVariant('formálisabb','a')">↑ Formálisabb</button>
+          <button class="regen-btn" onclick="regenVariant('személyesebb','a')">♥ Személyesebb</button>
+          <button class="regen-btn" onclick="regenVariant('merészebb hookkal','a')">⚡ Merészebb hook</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel B -->
+    <div class="result-panel" id="panel-b">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            B változat
+          </div>
+          <div class="result-actions">
+            <button class="action-btn" id="preview-btn-b" onclick="togglePreview('b')">👁 Előnézet</button>
+            <button class="action-btn" id="save-btn-b" onclick="savePost('b')">Mentés</button>
+            <button class="action-btn" id="edit-btn-b" onclick="toggleEdit('b')">✏ Szerkesztés</button>
+            <button class="action-btn" id="copy-btn-b" onclick="copyPost('b')">Másolás</button>
+            <button class="action-btn" id="export-btn-b" onclick="exportPost('b')">⬇ .txt</button>
+          </div>
+        </div>
+        <div class="lp-wrap" id="lp-b"></div>
+        <div class="result-body">
+          <div class="post-display" id="post-output-b"></div>
+          <textarea class="post-editor-ta" id="post-editor-b" oninput="syncEditor('b')"></textarea>
+          <div class="char-count" id="char-count-b"></div>
+        </div>
+        <div class="ai-edit-row" id="ai-edit-row-b">
+          <span class="ai-edit-label">AI átírás:</span>
+          <input type="text" class="ai-edit-input" id="ai-edit-input-b" placeholder="Pl. legyen rövidebb, tegyél be konkrét számot, erősebb hook…" onkeydown="if(event.key==='Enter')applyAiEdit('b')">
+          <button class="ai-edit-btn" id="ai-edit-btn-b" onclick="applyAiEdit('b')">
+            <span id="ai-edit-btn-text-b">Átírás</span>
+            <div class="ai-loading" id="ai-edit-loading-b"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+        <div class="regenerate-row">
+          <button class="regen-btn" onclick="regenVariant('rövidebb','b')">↙ Rövidebb</button>
+          <button class="regen-btn" onclick="regenVariant('formálisabb','b')">↑ Formálisabb</button>
+          <button class="regen-btn" onclick="regenVariant('személyesebb','b')">♥ Személyesebb</button>
+          <button class="regen-btn" onclick="regenVariant('merészebb hookkal','b')">⚡ Merészebb hook</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mentett posztok -->
+  <div class="card saved-section" id="saved-section">
+    <div class="saved-header">
+      <span class="saved-header-title">Mentett posztok (<span id="saved-count">0</span>)</span>
+      <button class="clear-all-btn" onclick="clearAllSaved()">Összes törlése</button>
+    </div>
+    <input type="text" class="saved-search" id="saved-search" placeholder="Keresés a mentett posztok között…" oninput="renderSaved()">
+    <div class="saved-list" id="saved-list"></div>
+  </div>
+
+</div>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let selectedStyle = 'sztori', selectedLength = 'kozepes', selectedAudience = 'altalanos';
+let lastPost = { a: '', b: '' };
+let editMode = { a: false, b: false };
+let previewMode = { a: false, b: false };
+let savedPosts = JSON.parse(localStorage.getItem('linkedin_saved_posts') || '[]');
+let openSavedId = null;
+let profileSaveTimer = null;
+
+// ── Maps ───────────────────────────────────────────────────────────────────
+const styleMap = {
+  sztori:    'személyes sztori – konkrét élmény, előtte-utána dinamikával',
+  edukativ:  'edukatív – értéket ad, tanít valamit a közönségnek',
+  promo:     'ajánlat / szolgáltatás – meggyőzően mutatja be az értéket, cselekvésre hív',
+  inspiralo: 'inspiráló – gondolkodtató, motiváló gondolat',
+  velemeny:  'határozott vélemény / álláspont egy aktuális témában'
+};
+const lengthMap = { rovid: 'kb. 80–120 szó', kozepes: 'kb. 180–220 szó', hosszu: 'kb. 320–380 szó' };
+const audienceMap = {
+  altalanos:  'általános LinkedIn közönség',
+  szakmai:    'szakmai / iparági közönség',
+  ugyfel:     'potenciális ügyfelek, megrendelők',
+  vallalkozo: 'vállalkozók, cégvezetők',
+  fejleszto:  'szoftverfejlesztők, tech szakemberek'
+};
+const ctaMap = {
+  nincs:     'Ne legyen külön CTA.',
+  kerdes:    'A poszt végén tegyél egy kérdést, ami kommentelésre ösztönöz.',
+  link:      'Hívd az olvasót weboldalra vagy további tartalomra.',
+  kapcsolat: 'Hívd az olvasót kapcsolatfelvételre vagy DM-re.',
+  like:      'Kérd meg az olvasót, hogy lájkolja vagy mentse el a posztot.'
+};
+
+// ── Tags ───────────────────────────────────────────────────────────────────
+function initTags(id, setter) {
+  document.querySelectorAll('#' + id + ' .tag').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('#' + id + ' .tag').forEach(x => x.classList.remove('active'));
+    t.classList.add('active'); setter(t.dataset.value);
+  }));
+}
+initTags('style-tags',    v => selectedStyle = v);
+initTags('length-tags',   v => selectedLength = v);
+initTags('audience-tags', v => selectedAudience = v);
+
+// ── Profile ────────────────────────────────────────────────────────────────
+function loadProfile() {
+  const p = JSON.parse(localStorage.getItem('linkedin_profile') || '{}');
+  if (p.name)     document.getElementById('profile-name').value = p.name;
+  if (p.headline) document.getElementById('profile-headline').value = p.headline;
+  if (p.posts)    document.getElementById('style-posts').value = p.posts;
+  if (p.voice)    document.getElementById('voice-input').value = p.voice;
+}
+function saveProfile() {
+  const p = {
+    name:     document.getElementById('profile-name').value,
+    headline: document.getElementById('profile-headline').value,
+    posts:    document.getElementById('style-posts').value,
+    voice:    document.getElementById('voice-input').value
+  };
+  localStorage.setItem('linkedin_profile', JSON.stringify(p));
+  const badge = document.getElementById('profile-saved-badge');
+  badge.classList.add('visible');
+  setTimeout(() => badge.classList.remove('visible'), 2000);
+}
+function debounceProfileSave() {
+  clearTimeout(profileSaveTimer);
+  profileSaveTimer = setTimeout(saveProfile, 800);
+}
+loadProfile();
+
+document.getElementById('style-file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('style-posts').value = ev.target.result;
+    saveProfile();
+  };
+  reader.readAsText(file);
+});
+
+// ── Usage counter ──────────────────────────────────────────────────────────
+function updateUsageInfo(remaining) {
+  const el = document.getElementById('usage-info');
+  if (!el || remaining == null) return;
+  if (remaining <= 0) {
+    el.textContent = 'Elérted a napi limitet. Holnap folytathatod!';
+    el.className = 'usage-info limit';
+  } else if (remaining <= 4) {
+    el.textContent = `Csak ${remaining} generálás maradt mára.`;
+    el.className = 'usage-info warning';
+  } else {
+    el.textContent = `Napi limit: ${remaining} generálás maradt.`;
+    el.className = 'usage-info';
+  }
+}
+
+// ── API call (proxy) ───────────────────────────────────────────────────────
+async function callAPI(messages, useSearch = false) {
+  const body = { model: 'claude-sonnet-4-20250514', max_tokens: 1200, messages };
+  if (useSearch) body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+  const res = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const remaining = res.headers.get('X-RateLimit-Remaining');
+  if (remaining !== null) updateUsageInfo(parseInt(remaining));
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+}
+
+// ── Ideas (web search alapú, trendi) ──────────────────────────────────────
+async function generateIdeas() {
+  const btn = document.getElementById('ideas-btn');
+  const note = document.getElementById('ideas-note');
+  btn.disabled = true; btn.textContent = '… keresés';
+  note.textContent = 'Aktuális LinkedIn trendeket keresek…';
+  document.getElementById('ideas-row').innerHTML = '';
+  try {
+    const result = await callAPI([{
+      role: 'user',
+      content: `Keress rá aktuális LinkedIn trendekre és viral posztokra 2025-ben. Majd adj 5 konkrét, scroll-stopping LinkedIn poszt ötletet.
+
+Célközönség: ${audienceMap[selectedAudience]}.
+
+Követelmények az ötletekhez:
+- Minden ötlet tartalmazza a poszt első mondatát (a hook-ot), ami megállítja a scrollolást
+- Legyenek specifikusak, nem általánosak
+- Különböző formátumok: személyes vallomás, meglepő szám/adat, ellentmondásos vélemény, before/after, kulisszatitok
+- Aktuálisak és relevánsak 2025-ben
+- Maximum 15 szó ötletenként
+
+Csak az 5 ötletet add vissza, számozás nélkül, minden ötlet külön sorban. Ne írj magyarázatot.`
+    }], true);
+    const ideas = result.split('\n').map(l => l.trim()).filter(l => l.length > 5).slice(0, 5);
+    ideas.forEach(idea => {
+      const chip = document.createElement('button');
+      chip.className = 'idea-chip'; chip.textContent = idea;
+      chip.onclick = () => document.getElementById('topic').value = idea;
+      document.getElementById('ideas-row').appendChild(chip);
+    });
+    note.textContent = ideas.length ? 'Kattints egy ötletre, hogy bekerüljön a témamezőbe.' : '';
+  } catch(e) {
+    note.textContent = 'Hiba: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '✦ Trendi ötletek generálása';
+}
+
+// ── Viral insights ─────────────────────────────────────────────────────────
+async function fetchViralInsights() {
+  if (!document.getElementById('viral-toggle').checked) return;
+  const banner = document.getElementById('viral-banner'), textEl = document.getElementById('viral-text');
+  banner.classList.add('visible');
+  textEl.innerHTML = '<em style="color:var(--text-muted)">Keresem a legfrissebb trendeket…</em>';
+  try {
+    const result = await callAPI([{ role: 'user', content: `Keress rá: milyen LinkedIn posztok virálisak 2025-ben? Elemezd:\n1. Milyen hook típusok állítják meg a scrollolást?\n2. Milyen érzelmekre épít a legtöbb engagement?\n3. Milyen posztstruktúra teljesít legjobban?\n4. Milyen témák és szavak trendek most?\nRöviden, pontokban, magyarul.` }], true);
+    textEl.innerHTML = result.replace(/\n/g, '<br>');
+  } catch(e) {
+    textEl.innerHTML = '<em style="color:var(--text-muted)">Nem sikerült betölteni.</em>';
+  }
+}
+
+// ── Build prompt ───────────────────────────────────────────────────────────
+function buildPrompt(topic, variantLabel) {
+  const lang = document.getElementById('lang-select').value;
+  const langLabel = lang === 'hu' ? 'magyarul' : 'in English';
+  const useEmoji = document.getElementById('emoji-toggle').checked;
+  const cta = document.getElementById('cta-select').value;
+  const voice = document.getElementById('voice-input').value.trim();
+  const stylePosts = document.getElementById('style-posts').value.trim();
+  const viralRaw = document.getElementById('viral-text')?.innerText?.trim() || '';
+  const hasViral = viralRaw && !viralRaw.includes('Keresem') && !viralRaw.includes('Nem sikerült') && !viralRaw.includes('Betöltés');
+
+  let p = `Írj egy LinkedIn posztot ${langLabel} erről: "${topic}"\n\n`;
+  p += `Célközönség: ${audienceMap[selectedAudience]}.\n`;
+  p += `Stílus: ${styleMap[selectedStyle]}.\n`;
+  p += `Hossz: ${lengthMap[selectedLength]}.\n`;
+  if (voice) p += `Hangvétel: ${voice}.\n`;
+  if (stylePosts) p += `\nA szerző korábbi posztjai – tanulj ebből a stílusból:\n---\n${stylePosts}\n---\n`;
+  p += `\n${useEmoji ? 'Használj emojikat természetesen, ne túlzottan.' : 'Ne használj emojikat.'}\n`;
+  p += `A poszt végén pontosan 3 releváns hashtag legyen.\n`;
+  p += `CTA: ${ctaMap[cta]}\n`;
+  if (hasViral) p += `\nAktuális LinkedIn trendek (inspirálódj, ne másold):\n${viralRaw}\n`;
+  p += `\nEz a ${variantLabel}. Legyen strukturálisan eltérő a másik változattól (más hook, más felépítés), de ugyanolyan minőségű.\n`;
+  p += `\nFontos: erős hook az első sorban, autentikus hang, az olvasó számára értékes. Csak a posztot add vissza, semmi mást.`;
+  return p;
+}
+
+// ── Generate ───────────────────────────────────────────────────────────────
+async function generatePost(modifier = null, targetPanel = null) {
+  const topic = document.getElementById('topic').value.trim();
+  if (!topic) { alert('Kérlek írd le a témát!'); return; }
+
+  const btn = document.getElementById('gen-btn');
+  const btnText = document.getElementById('btn-text');
+  const loading = document.getElementById('loading');
+  btn.disabled = true; btnText.style.display = 'none'; loading.classList.add('visible');
+
+  if (!modifier) fetchViralInsights();
+
+  try {
+    if (modifier && targetPanel) {
+      const stylePosts = document.getElementById('style-posts').value.trim();
+      let p = `Az alábbi LinkedIn posztot alakítsd át: legyen ${modifier}. Tartsd meg az eredeti témát. A poszt végén pontosan 3 releváns hashtag. Csak a módosított posztot add vissza.\n\n${lastPost[targetPanel]}`;
+      if (stylePosts) p += `\n\nA szerző stílusa (tartsd meg):\n---\n${stylePosts}\n---`;
+      const result = await callAPI([{ role: 'user', content: p }]);
+      lastPost[targetPanel] = result;
+      setPostText(targetPanel, result);
+    } else {
+      const [postA, postB] = await Promise.all([
+        callAPI([{ role: 'user', content: buildPrompt(topic, 'A változat') }]),
+        callAPI([{ role: 'user', content: buildPrompt(topic, 'B változat') }])
+      ]);
+      lastPost.a = postA; lastPost.b = postB;
+      setPostText('a', postA); setPostText('b', postB);
+      ['a','b'].forEach(p => {
+        document.getElementById('save-btn-' + p).textContent = 'Mentés';
+        document.getElementById('save-btn-' + p).classList.remove('saved-ok');
+        if (editMode[p]) exitEditMode(p);
+      });
+    }
+    document.getElementById('results-container').classList.add('visible');
+  } catch(e) {
+    const msg = 'Hiba: ' + e.message;
+    if (targetPanel) setPostText(targetPanel, msg);
+    else { setPostText('a', msg); setPostText('b', ''); }
+    document.getElementById('results-container').classList.add('visible');
+  }
+
+  btn.disabled = false; btnText.style.display = 'inline'; loading.classList.remove('visible');
+}
+
+async function regenVariant(modifier, panel) {
+  if (lastPost[panel]) await generatePost(modifier, panel);
+}
+
+// ── Tab switch ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['a','b'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+// ── Post text helpers ──────────────────────────────────────────────────────
+function setPostText(panel, text) {
+  document.getElementById('post-output-' + panel).textContent = text;
+  document.getElementById('post-editor-' + panel).value = text;
+  updateCharCount(panel, text.length);
+  if (previewMode[panel]) renderLinkedInPreview(panel);
+}
+function updateCharCount(panel, len) {
+  const cc = document.getElementById('char-count-' + panel);
+  cc.textContent = len + ' karakter';
+  cc.className = 'char-count' + (len > 3000 ? ' over' : '');
+}
+function syncEditor(panel) {
+  lastPost[panel] = document.getElementById('post-editor-' + panel).value;
+  updateCharCount(panel, lastPost[panel].length);
+  if (previewMode[panel]) renderLinkedInPreview(panel);
+}
+
+// ── Edit mode ──────────────────────────────────────────────────────────────
+function toggleEdit(panel) {
+  editMode[panel] = !editMode[panel];
+  const display = document.getElementById('post-output-' + panel);
+  const editor  = document.getElementById('post-editor-' + panel);
+  const editBtn = document.getElementById('edit-btn-' + panel);
+  const aiRow   = document.getElementById('ai-edit-row-' + panel);
+  if (editMode[panel]) {
+    editor.value = lastPost[panel];
+    if (!previewMode[panel]) display.classList.add('hidden');
+    editor.classList.add('visible');
+    editBtn.textContent = '✓ Kész'; editBtn.classList.add('edit-active');
+    aiRow.classList.add('visible'); editor.focus();
+  } else {
+    lastPost[panel] = editor.value;
+    display.textContent = lastPost[panel];
+    if (!previewMode[panel]) display.classList.remove('hidden');
+    editor.classList.remove('visible');
+    editBtn.textContent = '✏ Szerkesztés'; editBtn.classList.remove('edit-active');
+    aiRow.classList.remove('visible');
+  }
+}
+function exitEditMode(panel) {
+  if (!editMode[panel]) return;
+  editMode[panel] = false;
+  document.getElementById('post-output-' + panel).classList.remove('hidden');
+  document.getElementById('post-editor-' + panel).classList.remove('visible');
+  document.getElementById('edit-btn-' + panel).textContent = '✏ Szerkesztés';
+  document.getElementById('edit-btn-' + panel).classList.remove('edit-active');
+  document.getElementById('ai-edit-row-' + panel).classList.remove('visible');
+}
+
+// ── AI edit ────────────────────────────────────────────────────────────────
+async function applyAiEdit(panel) {
+  if (!lastPost[panel]) return;
+  const instruction = document.getElementById('ai-edit-input-' + panel).value.trim();
+  if (!instruction) { alert('Írd le mit változtassak!'); return; }
+  const btn     = document.getElementById('ai-edit-btn-' + panel);
+  const btnText = document.getElementById('ai-edit-btn-text-' + panel);
+  const loading = document.getElementById('ai-edit-loading-' + panel);
+  btn.disabled = true; btnText.style.display = 'none'; loading.classList.add('visible');
+  try {
+    const result = await callAPI([{ role: 'user', content: `Módosítsd ezt a LinkedIn posztot az alábbi utasítás alapján: "${instruction}"\nTartsd meg az eredeti témát. A poszt végén pontosan 3 releváns hashtag. Csak a módosított posztot add vissza.\n\n${lastPost[panel]}` }]);
+    lastPost[panel] = result;
+    document.getElementById('post-editor-' + panel).value = result;
+    document.getElementById('post-output-' + panel).textContent = result;
+    updateCharCount(panel, result.length);
+    document.getElementById('ai-edit-input-' + panel).value = '';
+    if (previewMode[panel]) renderLinkedInPreview(panel);
+  } catch(e) { alert('Hiba: ' + e.message); }
+  btn.disabled = false; btnText.style.display = 'inline'; loading.classList.remove('visible');
+}
+
+// ── Copy ───────────────────────────────────────────────────────────────────
+function copyPost(panel) {
+  navigator.clipboard.writeText(lastPost[panel] || '').then(() => {
+    const btn = document.getElementById('copy-btn-' + panel);
+    btn.textContent = '✓ Másolva'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Másolás'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── Export .txt ────────────────────────────────────────────────────────────
+function exportPost(panel) {
+  const text = lastPost[panel];
+  if (!text) return;
+  const topic = document.getElementById('topic').value.trim() || 'linkedin-poszt';
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = topic.slice(0, 40).replace(/[^\w\s\-áéíóöőúüűÁÉÍÓÖŐÚÜŰ]/g, '').trim() + '_' + panel + '.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── LinkedIn preview ───────────────────────────────────────────────────────
+function togglePreview(panel) {
+  previewMode[panel] = !previewMode[panel];
+  const btn     = document.getElementById('preview-btn-' + panel);
+  const wrap    = document.getElementById('lp-' + panel);
+  const display = document.getElementById('post-output-' + panel);
+  if (previewMode[panel]) {
+    renderLinkedInPreview(panel);
+    wrap.classList.add('visible');
+    display.classList.add('hidden');
+    btn.textContent = '✕ Előnézet bezárva'; btn.classList.add('preview-active');
+  } else {
+    wrap.classList.remove('visible');
+    display.classList.remove('hidden');
+    btn.textContent = '👁 Előnézet'; btn.classList.remove('preview-active');
+  }
+}
+
+function renderLinkedInPreview(panel) {
+  const name     = document.getElementById('profile-name').value.trim() || 'Te';
+  const headline = document.getElementById('profile-headline').value.trim() || 'LinkedIn Tag';
+  const text     = lastPost[panel] || '';
+  const initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'TE';
+  const TRUNCATE = 240;
+  const needsMore = text.length > TRUNCATE;
+  const displayText = needsMore ? text.slice(0, TRUNCATE) + '…' : text;
+
+  document.getElementById('lp-' + panel).innerHTML = `
+    <div class="lp-card">
+      <div class="lp-top">
+        <div class="lp-avatar">${escHtml(initials)}</div>
+        <div class="lp-info">
+          <div class="lp-name">${escHtml(name)}</div>
+          <div class="lp-headline">${escHtml(headline)}</div>
+          <div class="lp-meta">1 perce &nbsp;·&nbsp; <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 13H9V9h2v6zm4 0h-2V9h2v6z"/></svg></div>
+        </div>
+        <button class="lp-follow-btn">+ Követés</button>
+      </div>
+      <div class="lp-body">
+        <div class="lp-text" id="lp-text-${panel}">${escHtml(displayText)}</div>
+        ${needsMore ? `<button class="lp-more-btn" onclick="expandLpPreview('${panel}')">…tovább</button>` : ''}
+      </div>
+      <div class="lp-reactions">👍 ❤️ 💡 &nbsp; 24</div>
+      <hr class="lp-divider">
+      <div class="lp-actions">
+        <button class="lp-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>Tetszik</button>
+        <button class="lp-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Hozzászólás</button>
+        <button class="lp-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Megosztás</button>
+        <button class="lp-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Küldés</button>
+      </div>
+    </div>`;
+}
+
+function expandLpPreview(panel) {
+  const el = document.getElementById('lp-text-' + panel);
+  if (!el) return;
+  el.textContent = lastPost[panel] || '';
+  const btn = el.nextElementSibling;
+  if (btn && btn.classList.contains('lp-more-btn')) btn.remove();
+}
+
+// ── Save posts ─────────────────────────────────────────────────────────────
+function savePost(panel) {
+  if (!lastPost[panel]) return;
+  const topic = document.getElementById('topic').value.trim() || '(témamegjelölés nélkül)';
+  const entry = {
+    id: Date.now(), topic, text: lastPost[panel],
+    date: new Date().toLocaleDateString('hu-HU', { year:'numeric', month:'short', day:'numeric' })
+  };
+  savedPosts.unshift(entry);
+  if (savedPosts.length > 50) savedPosts = savedPosts.slice(0, 50);
+  persistSaved();
+  const btn = document.getElementById('save-btn-' + panel);
+  btn.textContent = '✓ Mentve'; btn.classList.add('saved-ok');
+  renderSaved();
+}
+function persistSaved() { localStorage.setItem('linkedin_saved_posts', JSON.stringify(savedPosts)); }
+
+function renderSaved() {
+  const section = document.getElementById('saved-section');
+  const list    = document.getElementById('saved-list');
+  const query   = (document.getElementById('saved-search')?.value || '').toLowerCase().trim();
+  const filtered = savedPosts.filter(p => !query || p.topic.toLowerCase().includes(query) || p.text.toLowerCase().includes(query));
+  document.getElementById('saved-count').textContent = savedPosts.length;
+  if (savedPosts.length === 0) { section.classList.remove('visible'); return; }
+  section.classList.add('visible');
+  if (filtered.length === 0) { list.innerHTML = '<div class="empty-saved">Nincs találat a keresésre.</div>'; return; }
+  list.innerHTML = filtered.map(p => `
+    <div class="saved-item" id="si-${p.id}">
+      <div class="saved-item-top" onclick="toggleSavedItem(${p.id})">
+        <div class="saved-item-meta">
+          <span class="saved-item-topic">${escHtml(p.topic)}</span>
+          <span class="saved-item-date">${p.date}</span>
+        </div>
+        <div class="saved-item-preview">${escHtml(p.text)}</div>
+      </div>
+      <div class="saved-item-body ${openSavedId === p.id ? 'open' : ''}" id="sib-${p.id}">
+        <div class="saved-item-editor-wrap">
+          <textarea class="saved-item-ta" id="sita-${p.id}" oninput="updateSavedText(${p.id}, this.value)">${escHtml(p.text)}</textarea>
+        </div>
+        <div class="saved-item-actions">
+          <button class="saved-action primary" onclick="loadSavedToEditor(${p.id})">↑ Betöltés szerkesztőbe</button>
+          <button class="saved-action" id="scopy-${p.id}" onclick="copySaved(${p.id})">Másolás</button>
+          <button class="saved-action del" onclick="deleteSaved(${p.id})">Törlés</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toggleSavedItem(id) {
+  openSavedId = openSavedId === id ? null : id;
+  renderSaved();
+  if (openSavedId) setTimeout(() => { const el = document.getElementById('si-' + id); if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }, 50);
+}
+function updateSavedText(id, newText) {
+  const p = savedPosts.find(x => x.id === id);
+  if (p) { p.text = newText; persistSaved(); }
+}
+function loadSavedToEditor(id) {
+  const p = savedPosts.find(x => x.id === id);
+  if (!p) return;
+  lastPost.a = p.text;
+  document.getElementById('topic').value = p.topic !== '(témamegjelölés nélkül)' ? p.topic : '';
+  setPostText('a', p.text);
+  document.getElementById('results-container').classList.add('visible');
+  document.getElementById('save-btn-a').textContent = 'Mentés';
+  document.getElementById('save-btn-a').classList.remove('saved-ok');
+  if (editMode.a) exitEditMode('a');
+  switchTab('a');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function copySaved(id) {
+  const p = savedPosts.find(x => x.id === id);
+  if (!p) return;
+  navigator.clipboard.writeText(p.text).then(() => {
+    const btn = document.getElementById('scopy-' + id);
+    if (btn) { btn.textContent = '✓ Másolva'; btn.classList.add('copy-ok'); setTimeout(() => { btn.textContent = 'Másolás'; btn.classList.remove('copy-ok'); }, 2000); }
+  });
+}
+function deleteSaved(id) {
+  if (!confirm('Biztosan törlöd ezt a posztot?')) return;
+  savedPosts = savedPosts.filter(x => x.id !== id);
+  if (openSavedId === id) openSavedId = null;
+  persistSaved(); renderSaved();
+}
+function clearAllSaved() {
+  if (!confirm('Biztosan törlöd az összes mentett posztot?')) return;
+  savedPosts = []; openSavedId = null;
+  persistSaved(); renderSaved();
+}
+
+renderSaved();
+</script>
+</body>
+</html>
