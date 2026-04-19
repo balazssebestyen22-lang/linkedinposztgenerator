@@ -57,5 +57,14 @@ app.post('/api/proxy', async (req, res) => {
 // ── Statikus fájlok ───────────────────────────────────────────────────────
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
+// ── Debug ─────────────────────────────────────────────────────────────────
+app.get('/debug', (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY || '';
+  res.json({
+    keySet: !!key,
+    keyPrefix: key ? key.slice(0, 10) + '...' : 'NINCS BEÁLLÍTVA'
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`LinkedIn Generátor fut: http://localhost:${PORT}`));
