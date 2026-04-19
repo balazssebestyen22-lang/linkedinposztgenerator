@@ -67,4 +67,10 @@ app.get('/debug', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.get('/debug', (req, res) => {                                             
+    const key = process.env.ANTHROPIC_API_KEY || '';                            
+    res.json({ keySet: !!key, keyPrefix: key ? key.slice(0, 10) + '...' :       
+  'NINCS' });                                                                   
+  });
 app.listen(PORT, () => console.log(`LinkedIn Generátor fut: http://localhost:${PORT}`));
